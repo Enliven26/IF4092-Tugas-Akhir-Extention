@@ -1,0 +1,4 @@
+#!/bin/bash
+
+python_script_path="$(dirname "$0")/prepare-commit-msg.py"
+python "$python_script_path" "$1"
