@@ -3,6 +3,7 @@ export enum SecretKeys {
 }
 
 export enum Commands {
+    GitHookCommand = "autocommit.gitHook",
     ApiKeyCommand = "autocommit.apiKey",
-    GitHookCommand = "autocommit.gitHook"
+    ClearApiKeyCommand = "autocommit.clearApiKey"
 }

@@ -9,7 +9,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -20,6 +22,10 @@
       {
         "command": "autocommit.apiKey",
         "title": "Setup Api Key"
+      },
+      {
+        "command": "autocommit.clearApiKey",
+        "title": "Clear Api Key"
       }
     ],
     "configuration": {
