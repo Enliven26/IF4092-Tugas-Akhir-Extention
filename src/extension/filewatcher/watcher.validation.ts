@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import path from 'path';
-import { simpleGit } from 'simple-git';
 import { WarningMessages } from '../../core/constants/messages';
 import { SecretKeys } from '../../core/constants/enums';
 import { InMemoryState } from '../models';
+import { isFileIsTrackedByGitAsync, isGitIsIntializedAsync } from '../../core/services/gitservice';
 
 export const validateFileChangesAsync = async (
     context: vscode.ExtensionContext, 
@@ -31,7 +31,7 @@ export const validateFileChangesAsync = async (
     const isApiKeyProvided = existingApiKey !== undefined;
 
     if (!isGitExist || !isApiKeyProvided) {
-        warnUser(context, inMemoryState, isGitExist, isApiKeyProvided);
+        warnUser(inMemoryState, isGitExist, isApiKeyProvided);
         return false;
     }
 
@@ -46,7 +46,6 @@ export const validateFileChangesAsync = async (
 };
 
 const warnUser = (
-    context: vscode.ExtensionContext, 
     inMemoryState: InMemoryState, 
     isGitProvided: boolean, 
     isApiKeyProvided: boolean) => {
@@ -65,13 +64,3 @@ const warnUser = (
     }  
 };
 
-const isGitIsIntializedAsync = async (workspacePath: string): Promise<boolean> => {
-    const git = simpleGit(workspacePath);
-    return await git.checkIsRepo();
-};
-
-const isFileIsTrackedByGitAsync = async (filePath: string, workspacePath: string): Promise<boolean> => {
-    const git = simpleGit(workspacePath);
-    const isIgnored = await git.checkIgnore(filePath);
-    return isIgnored.length === 0;
-};
