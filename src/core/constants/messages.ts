@@ -18,6 +18,7 @@ export enum WarningMessages {
 
 export enum ErrorMessages {
     NoWorkspaceFolder = "Workspace folder not found.",
+    MultipleWorkspaceFolders = "Multiple workspace folders are not supported.",
     GitHookSetupFailedExistingHook = "Failed to setup Git Hook. Please remove existing commit message hook or modify it manually.",
     GitHookSetupFailedError = "Failed to setup Git Hook: {}"
 }

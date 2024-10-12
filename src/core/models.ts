@@ -6,10 +6,11 @@ export interface FileChangeModel {
 
 export interface GitDiffModel {
     uri: string;
-    diff: Array<DiffLineModel>;
+    diff: Array<DiffRangeModel>;
 }
 
-export interface DiffLineModel {
-    line: number;
+export interface DiffRangeModel {
+    startLine: number;
+    endLine: number;
     content: string;
 }
