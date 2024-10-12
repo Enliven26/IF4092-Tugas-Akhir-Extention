@@ -12,7 +12,8 @@ export enum InformationMessages {
 }
 
 export enum WarningMessages {
-    ApiKeyNotProvided = "No API key was provided."
+    ApiKeyNotProvided = "No API key was provided. AutoCommit will not work until an API key is provided.",
+    GitNotInitialized = "Git is not initialized in the current workspace. AutoCommit will not work until Git is initialized."
 }
 
 export enum ErrorMessages {

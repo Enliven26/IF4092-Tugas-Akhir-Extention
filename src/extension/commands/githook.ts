@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ErrorMessages, InformationMessages, PromptMessages, WarningMessages } from '../constants/messages';
+import { ErrorMessages, InformationMessages, PromptMessages, WarningMessages } from '../../core/constants/messages';
 
 const gitFolderName = ".git";
 const gitHookFolderName = "hooks";
@@ -22,8 +22,8 @@ export const setUpGitHook = async (context: vscode.ExtensionContext) => {
 
     const extensionPath = context.extensionPath;
     const hookSourcePath = path.join(extensionPath, projectHookFolderName, hookName);
-    const pythonHookSourcePath = path.join(extensionPath, projectHookFolderName, pythonHookName); 
-    
+    const pythonHookSourcePath = path.join(extensionPath, projectHookFolderName, pythonHookName);
+
     if (fs.existsSync(gitHookPath)) {
         const replaceChoice = 'Replace';
         const cancelChoice = 'Cancel';
@@ -48,8 +48,7 @@ export const setUpGitHook = async (context: vscode.ExtensionContext) => {
     } catch (error) {
         var errorMessage = "Unknown";
 
-        if (error instanceof Error)
-        {
+        if (error instanceof Error) {
             errorMessage = error.message;
         }
 
