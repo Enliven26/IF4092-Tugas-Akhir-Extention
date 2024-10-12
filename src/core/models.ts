@@ -1,7 +1,15 @@
-import * as vscode from 'vscode';
-
 export interface FileChangeModel {
-    uri: vscode.Uri;
+    uri: string;
     startLine: number;
     endLine: number;
+}
+
+export interface GitDiffModel {
+    uri: string;
+    diff: Array<DiffLineModel>;
+}
+
+export interface DiffLineModel {
+    line: number;
+    content: string;
 }

@@ -1,13 +1,22 @@
 import * as vscode from 'vscode';
 import path from 'path';
 import { FileChangeModel } from '../../core/models';
+import { getGitDiffsAsync } from '../../core/services/gitservice';
 
 export const handleFileChangesAsync = async (context: vscode.ExtensionContext, event: vscode.TextDocumentChangeEvent) => {
-    const fileChanges = getFileChanges(event);
+    const documentUri = event.document.uri;
 
-    fileChanges.forEach(async change => {
-        console.log(`File ${path.basename(change.uri.fsPath)} has been changed. Start line: ${change.startLine}, End line: ${change.endLine}`);
-    });
+    if (documentUri.scheme !== 'file') {
+        return;
+    }
+
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(documentUri);
+    if (!workspaceFolder) {
+        return;
+    }
+
+    const fileChanges = getFileChanges(event);
+    const diffs = await getGitDiffsAsync(workspaceFolder.uri.fsPath, fileChanges);
 };
 
 const getFileChanges = (event: vscode.TextDocumentChangeEvent): Array<FileChangeModel> => {
@@ -21,7 +30,7 @@ const getFileChanges = (event: vscode.TextDocumentChangeEvent): Array<FileChange
         var startLine = change.range.start.line;
         var endLine = Math.max(startLine + lines.length - 1, change.range.end.line);
 
-        result.push({ uri: event.document.uri, startLine, endLine });
+        result.push({ uri: event.document.uri.fsPath, startLine, endLine });
     });
 
     return result;
