@@ -1,7 +1,4 @@
 import { simpleGit } from 'simple-git';
-import { DiffRangeModel, FileChangeModel, GitDiffModel } from '../models';
-import parseGitDiff from 'parse-git-diff';
-import { AnyFileChange } from 'parse-git-diff';
 
 export const isGitIsIntializedAsync = async (workspacePath: string): Promise<boolean> => {
     const git = simpleGit(workspacePath);
@@ -16,28 +13,7 @@ export const isFileIsTrackedByGitAsync = async (filePath: string, workspacePath:
 
 export const getGitDiffsAsync = async (
     workspacePath: string, 
-    fileChanges: Array<FileChangeModel>
-): Promise<Array<GitDiffModel>> => {
+): Promise<string> => {
     const git = simpleGit(workspacePath);
-    const result = new Array<GitDiffModel>();
-
-    for (const fileChange of fileChanges) {
-        const diff = await git.diff(['HEAD', '--', fileChange.uri]);
-        const parsedDiff = parseGitDiff(diff);
-
-        for (const file of parsedDiff.files) {
-            const diffRanges = new Array<DiffRangeModel>();
-
-            result.push({ uri: fileChange.uri, diff: diffRanges });
-        }
-    }
-
-    return result;
+    return await git.diff(['HEAD']);
 };
-
-// const getDiffRanges = (file: AnyFileChange): Array<DiffRangeModel> => {
-//     const diffLines = new Array<DiffRangeModel>();
-//         for (const chunk of file.chunks) {
-//             const minLine 
-//         }
-// };

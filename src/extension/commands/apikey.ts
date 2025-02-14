@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { SecretStorage } from "vscode";
-import { SecretKeys } from '../../core/constants/enums';
-import { InformationMessages, PromptMessages, WarningMessages } from '../../core/constants/messages';
+import { SecretKeys } from '../../core/domain/enums';
+import { InformationMessages, PromptMessages, WarningMessages } from '../../core/domain/constants/messages';
 
 export const setApiKey = async (context: vscode.ExtensionContext) => {
     const secrets: SecretStorage = context.secrets;
