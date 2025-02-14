@@ -1,10 +1,11 @@
 import * as vscode from 'vscode';
 import { setApiKey, clearApiKey } from './extension/commands/apikey';
 import { setUpGitHook } from './extension/commands/githook';
-import { watchFileChangesAsync, watchFileRenameAsync } from './extension/filewatcher/watcher';
-import { Commands } from './extension/constants/enums';
+import { Commands } from './extension/domain/enums';
 import { InMemoryState } from './extension/models';
-import { ErrorMessages } from './core/constants/messages';
+import { ErrorMessages } from './core/domain/constants/messages';
+import { BackgroundTaskInterval } from './extension/domain/constants/values';
+import { validateInitializations } from './extension/actions/validations';
 
 const inMemoryState: InMemoryState = {
 	hasWarnedGitNotInitialized: false,
@@ -21,17 +22,18 @@ const registerCommands = (context: vscode.ExtensionContext) => {
 	disposables.forEach(disposable => context.subscriptions.push(disposable));
 };
 
-const registerFileWatcher = (context: vscode.ExtensionContext, inMemoryState: InMemoryState) => {
+const registerBackgroundTasks = (context: vscode.ExtensionContext, inMemoryState: InMemoryState) => {
+	const interval = setInterval(() => {
+        validateInitializations(context, inMemoryState);
+    }, BackgroundTaskInterval);
+
 	const disposables = [
 		vscode.workspace.onDidChangeTextDocument(
-			(event) => watchFileChangesAsync(context, event, inMemoryState)),
-		vscode.workspace.onDidRenameFiles(
-		(event) => watchFileRenameAsync(context, event, inMemoryState))
+			(_) => new vscode.Disposable(() => clearInterval(interval)))
 	];
 		
 	disposables.forEach(disposable => context.subscriptions.push(disposable));
 };
-
 
 export function activate(context: vscode.ExtensionContext) {
 	registerCommands(context);
@@ -48,8 +50,9 @@ export function activate(context: vscode.ExtensionContext) {
 		return;
 	}
 
-	registerFileWatcher(context, inMemoryState);
+	registerBackgroundTasks(context, inMemoryState);
 }
 
 export function deactivate() {
 }
+

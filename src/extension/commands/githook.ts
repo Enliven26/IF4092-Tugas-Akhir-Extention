@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ErrorMessages, InformationMessages, PromptMessages, WarningMessages } from '../../core/constants/messages';
+import { ErrorMessages, InformationMessages, PromptMessages, WarningMessages } from '../../core/domain/constants/messages';
 
 const gitFolderName = ".git";
 const gitHookFolderName = "hooks";

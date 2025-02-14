@@ -34,12 +34,7 @@
         "autocommit.apiConfiguration.model": {
           "type": "string",
           "default": "gpt-4o-mini",
-          "description": "This configuration set the OpenAI model used for context gathering and commit message generation."
-        },
-        "autocommit.apiConfiguration.apiKey": {
-          "type": "number",
-          "default": 0.5,
-          "description": "This configuration set the temperature of the GPT model."
+          "description": "This configuration set the LLM model used for commit message generation."
         }
       }
     }
