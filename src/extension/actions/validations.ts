@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { WarningMessages } from '../../core/domain/constants/messages';
 import { InMemoryState } from '../models';
 import { isGitIsIntializedAsync } from '../../core/services/gitservice';
-import { SecretKeys } from '../../core/domain/enums';
+import { SecretKeys } from '../domain/enums';
 
 export const validateInitializations = async (
     context: vscode.ExtensionContext,

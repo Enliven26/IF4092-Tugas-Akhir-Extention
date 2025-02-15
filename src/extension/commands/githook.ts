@@ -2,12 +2,60 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ErrorMessages, InformationMessages, PromptMessages, WarningMessages } from '../../core/domain/constants/messages';
+import * as childProcess from 'child_process';
+import { promisify } from 'util';
+import { GitHookVenvFolderName } from '../domain/constants/values';
+
+const exec = promisify(childProcess.exec);
 
 const gitFolderName = ".git";
 const gitHookFolderName = "hooks";
 const projectHookFolderName = "hooks";
-const hookName = "prepare-commit-msg";
-const pythonHookName = "prepare-commit-msg.py";
+
+const installGitHookRequirements = async (gitHookFolderPath: string, venvPath: string) => {
+    await vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: "Setting up Git hook environment",
+        cancellable: false
+    }, async (progress) => {
+        try {
+            progress.report({ message: "Creating virtual environment..." });
+            
+            let pythonCommand = 'python3';
+
+            try {
+                await exec('python3 --version');
+            } catch {
+                pythonCommand = 'python';
+            }
+
+            if (fs.existsSync(venvPath)) {
+                fs.rmSync(venvPath, { recursive: true, force: true });
+            }
+
+            await exec(`${pythonCommand} -m venv "${venvPath}"`);
+
+            progress.report({ message: "Installing requirements..." });
+            
+            const requirementsPath = path.join(gitHookFolderPath, 'requirements.txt');
+
+            if (!fs.existsSync(requirementsPath)) {
+                throw new Error('requirements.txt not found in hook folder');
+            }
+
+            const pipPath = process.platform === 'win32' 
+                ? path.join(venvPath, 'Scripts', 'pip')
+                : path.join(venvPath, 'bin', 'pip');
+
+            await exec(`"${pipPath}" install -r "${requirementsPath}"`);
+
+            vscode.window.showInformationMessage(InformationMessages.GitHookSetupSuccess);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Unknown";
+            throw new Error(`Python setup failed: ${errorMessage}`);
+        }
+    });
+};
 
 export const setUpGitHook = async (context: vscode.ExtensionContext) => {
     const workspaceFolder = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : undefined;
@@ -17,14 +65,18 @@ export const setUpGitHook = async (context: vscode.ExtensionContext) => {
         return;
     }
 
-    const gitHookPath = path.join(workspaceFolder, gitFolderName, gitHookFolderName, hookName);
-    const pythonGitHookPath = path.join(workspaceFolder, gitFolderName, gitHookFolderName, pythonHookName);
+    const gitHookFolderPath = path.join(workspaceFolder, gitFolderName, gitHookFolderName);
+    const hookSourceFolderPath = path.join(context.extensionPath, projectHookFolderName);
 
-    const extensionPath = context.extensionPath;
-    const hookSourcePath = path.join(extensionPath, projectHookFolderName, hookName);
-    const pythonHookSourcePath = path.join(extensionPath, projectHookFolderName, pythonHookName);
+    const sourceFiles = fs.readdirSync(hookSourceFolderPath, { withFileTypes: true })
+        .filter(dirent => dirent.isFile())
+        .map(dirent => dirent.name);
 
-    if (fs.existsSync(gitHookPath)) {
+    const existingFiles = sourceFiles.filter(file => 
+        fs.existsSync(path.join(gitHookFolderPath, file))
+    );
+
+    if (existingFiles.length > 0) {
         const replaceChoice = 'Replace';
         const cancelChoice = 'Cancel';
 
@@ -40,18 +92,27 @@ export const setUpGitHook = async (context: vscode.ExtensionContext) => {
     }
 
     try {
-        fs.copyFileSync(hookSourcePath, gitHookPath);
-        fs.copyFileSync(pythonHookSourcePath, pythonGitHookPath);
-        fs.chmodSync(gitHookPath, '755');
-        fs.chmodSync(pythonHookSourcePath, '755');
-        vscode.window.showInformationMessage(InformationMessages.GitHookSetupSuccess);
-    } catch (error) {
-        var errorMessage = "Unknown";
-
-        if (error instanceof Error) {
-            errorMessage = error.message;
+        if (!fs.existsSync(gitHookFolderPath)) {
+            fs.mkdirSync(gitHookFolderPath, { recursive: true });
         }
 
-        vscode.window.showErrorMessage(ErrorMessages.GitHookSetupFailedError.replace("{}", errorMessage));
+        sourceFiles.forEach(file => {
+            const sourcePath = path.join(hookSourceFolderPath, file);
+            const targetPath = path.join(gitHookFolderPath, file);
+            
+            fs.copyFileSync(sourcePath, targetPath);
+            fs.chmodSync(targetPath, '755');
+        });
+
+        const venvPath = path.join(gitHookFolderPath, GitHookVenvFolderName);
+        
+        await installGitHookRequirements(gitHookFolderPath, venvPath);
+
+        vscode.window.showInformationMessage(InformationMessages.GitHookSetupSuccess);
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown";
+        vscode.window.showErrorMessage(
+            ErrorMessages.GitHookSetupFailedError.replace("{}", errorMessage)
+        );
     }
 };

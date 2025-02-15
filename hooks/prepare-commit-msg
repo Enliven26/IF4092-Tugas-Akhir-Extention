@@ -1,4 +1,25 @@
 #!/bin/bash
 
 python_script_path="$(dirname "$0")/prepare-commit-msg.py"
-python "$python_script_path" "$1"
+repo_root=$(git rev-parse --show-toplevel)
+
+exec < /dev/tty
+
+read -s -p "Enter your secret: " open_ai_key
+
+exec <&-
+
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
+    venv_python_path="$(dirname "$0")/autocommit_venv/Scripts/python.exe"
+else
+    venv_python_path="$(dirname "$0")/autocommit_venv/bin/python"
+fi
+
+if [ ! -f "$venv_python_path" ]; then
+    alt_path="$(dirname "$venv_python_path")/python3"
+    if [ -f "$alt_path" ]; then
+        venv_python_path="$alt_path"
+    fi
+fi
+
+"$venv_python_path" "$python_script_path" "$1" "$repo_root" "$open_ai_key"
