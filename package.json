@@ -31,10 +31,15 @@
     "configuration": {
       "title": "AutoCommit",
       "properties": {
-        "autocommit.apiConfiguration.model": {
+        "autocommit.apiConfiguration.llmModel": {
           "type": "string",
           "default": "gpt-4o-mini",
           "description": "This configuration set the LLM model used for commit message generation."
+        },
+        "autocommit.apiConfiguration.embeddingsModel": {
+          "type": "string",
+          "default": "text-embedding-3-small",
+          "description": "This configuration set the embeddings model used for creating context vector DB."
         }
       }
     }
