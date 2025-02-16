@@ -27,6 +27,9 @@ class ExtensionGit(Git):
     def get_current_diff(
         self, repo_path: str, included_file_paths: list[str] = []
     ) -> str:
+        if len(included_file_paths) == 0:
+            return ""
+
         command = ["git", "-C", repo_path, "diff"]
 
         if included_file_paths:

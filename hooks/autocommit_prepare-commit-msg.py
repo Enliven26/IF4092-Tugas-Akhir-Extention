@@ -86,7 +86,7 @@ def _initialize_open_ai_chain() -> CommitMessageGenerationChain:
 CONTEXT_FOLDER_NAME = "autocommit_context"
 CONTEXT_FILE_NAME = "contexts.txt"
 CONTEXT_NOT_FOUND_MESSAGE = "# Error: AutoCommit context not found. Please do context setup using `setup context` command\n"
-
+EMPTY_MESSAGE = "# No changes detected in the files\n"
 
 def main(commit_msg_file: str, repo_path: str):
     context_folder_path = os.path.abspath(
@@ -112,6 +112,9 @@ def main(commit_msg_file: str, repo_path: str):
             context_folder_path,
             [".java"],
         )
+
+    if (len(message) == 0):
+        message = EMPTY_MESSAGE
 
     with open(commit_msg_file, "a") as f:
         f.write(message)
