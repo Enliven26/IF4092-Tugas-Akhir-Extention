@@ -1,6 +1,6 @@
 #!/bin/bash
 
-python_script_path="$(dirname "$0")/prepare-commit-msg.py"
+python_script_path="$(dirname "$0")/autocommit_prepare-commit-msg.py"
 repo_root=$(git rev-parse --show-toplevel)
 
 exec < /dev/tty
@@ -8,6 +8,9 @@ exec < /dev/tty
 read -s -p "Enter your secret: " open_ai_key
 
 exec <&-
+
+echo ""
+echo "Generating commit message..."
 
 if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
     venv_python_path="$(dirname "$0")/autocommit_venv/Scripts/python.exe"

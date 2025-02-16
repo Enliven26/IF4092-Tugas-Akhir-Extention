@@ -20,6 +20,10 @@
         "title": "Setup Githook"
       },
       {
+        "command": "autocommit.context",
+        "title": "Setup Context"
+      },
+      {
         "command": "autocommit.apiKey",
         "title": "Setup Api Key"
       },
@@ -64,6 +68,7 @@
     "typescript": "^5.6.2"
   },
   "dependencies": {
+    "jira.js": "^4.0.6",
     "parse-git-diff": "^0.0.16",
     "simple-git": "^3.27.0"
   }

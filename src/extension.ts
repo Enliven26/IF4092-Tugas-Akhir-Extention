@@ -1,10 +1,11 @@
 import * as vscode from 'vscode';
 import { setApiKey, clearApiKey } from './extension/commands/apikey';
 import { setUpGitHook } from './extension/commands/githook';
+import { setContext } from './extension/commands/context';
 import { Commands } from './extension/domain/enums';
 import { InMemoryState } from './extension/models';
 import { ErrorMessages } from './core/domain/constants/messages';
-import { BackgroundTaskInterval } from './extension/domain/constants/values';
+import { backgroundTaskInterval } from './extension/domain/constants/values';
 import { validateInitializations } from './extension/actions/validations';
 
 const inMemoryState: InMemoryState = {
@@ -15,6 +16,7 @@ const inMemoryState: InMemoryState = {
 const registerCommands = (context: vscode.ExtensionContext) => {
 	const disposables = [
 		vscode.commands.registerCommand(Commands.GitHookCommand, () => setUpGitHook(context)),
+		vscode.commands.registerCommand(Commands.ContextCommand, () => setContext(context)),
 		vscode.commands.registerCommand(Commands.ApiKeyCommand, () => setApiKey(context)),
 		vscode.commands.registerCommand(Commands.ClearApiKeyCommand, () => clearApiKey(context))
 	];
@@ -25,7 +27,7 @@ const registerCommands = (context: vscode.ExtensionContext) => {
 const registerBackgroundTasks = (context: vscode.ExtensionContext, inMemoryState: InMemoryState) => {
 	const interval = setInterval(() => {
         validateInitializations(context, inMemoryState);
-    }, BackgroundTaskInterval);
+    }, backgroundTaskInterval);
 
 	const disposables = [
 		vscode.workspace.onDidChangeTextDocument(

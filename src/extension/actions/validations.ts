@@ -13,7 +13,7 @@ export const validateInitializations = async (
 	const secrets: vscode.SecretStorage = context.secrets;
 	const existingApiKey = await secrets.get(SecretKeys.ApiKey);
 	const isApiKeyProvided = existingApiKey !== undefined;
-	console.log(existingApiKey);
+
 	if (!isGitExist && !inMemoryState.hasWarnedGitNotInitialized) {
 		
 		vscode.window.showWarningMessage(WarningMessages.GitNotInitialized);
@@ -21,10 +21,10 @@ export const validateInitializations = async (
 		return;
 	}
 
-	if (!isApiKeyProvided && !inMemoryState.hasWarnedApiKeyNotProvided) {
-		vscode.window.showWarningMessage(WarningMessages.ApiKeyNotProvided);
-		inMemoryState.hasWarnedApiKeyNotProvided = true;
+	// if (!isApiKeyProvided && !inMemoryState.hasWarnedApiKeyNotProvided) {
+	// 	vscode.window.showWarningMessage(WarningMessages.ApiKeyNotProvided);
+	// 	inMemoryState.hasWarnedApiKeyNotProvided = true;
 		
-		return;
-	}  
+	// 	return;
+	// }  
 };
