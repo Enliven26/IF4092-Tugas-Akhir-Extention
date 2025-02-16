@@ -4,13 +4,10 @@ import * as path from 'path';
 import { ErrorMessages, InformationMessages, PromptMessages, WarningMessages } from '../../core/domain/constants/messages';
 import * as childProcess from 'child_process';
 import { promisify } from 'util';
-import { GitHookVenvFolderName } from '../domain/constants/values';
+import { gitHookVenvFolderName, gitHookRelativeFolderPath, gitHookSetupLockRelativePath, projectHookFolderPath, gitHookRequirementFileName } from '../domain/constants/values';
+import { isGitIsIntializedAsync } from '../../core/services/gitservice';
 
 const exec = promisify(childProcess.exec);
-
-const gitFolderName = ".git";
-const gitHookFolderName = "hooks";
-const projectHookFolderName = "hooks";
 
 const installGitHookRequirements = async (gitHookFolderPath: string, venvPath: string) => {
     await vscode.window.withProgress({
@@ -37,10 +34,10 @@ const installGitHookRequirements = async (gitHookFolderPath: string, venvPath: s
 
             progress.report({ message: "Installing requirements..." });
             
-            const requirementsPath = path.join(gitHookFolderPath, 'requirements.txt');
+            const requirementsPath = path.join(gitHookFolderPath, gitHookRequirementFileName);
 
             if (!fs.existsSync(requirementsPath)) {
-                throw new Error('requirements.txt not found in hook folder');
+                throw new Error(`Requirements file not found at ${requirementsPath}`);
             }
 
             const pipPath = process.platform === 'win32' 
@@ -65,11 +62,28 @@ export const setUpGitHook = async (context: vscode.ExtensionContext) => {
         return;
     }
 
-    const gitHookFolderPath = path.join(workspaceFolder, gitFolderName, gitHookFolderName);
-    const hookSourceFolderPath = path.join(context.extensionPath, projectHookFolderName);
+    const isGitExist = await isGitIsIntializedAsync(workspaceFolder);
+
+    if (!isGitExist) {
+        vscode.window.showErrorMessage(ErrorMessages.GitNotInitialized);
+        return;
+    }
+
+    const gitHookFolderPath = path.join(workspaceFolder, gitHookRelativeFolderPath);
+    const gitHookSetupLockPath = path.join(workspaceFolder, gitHookSetupLockRelativePath);
+
+    if (fs.existsSync(gitHookSetupLockPath)) {
+        vscode.window.showWarningMessage(WarningMessages.GitHookSetupIsBeingLocked);
+        return;
+    }
+
+    fs.writeFileSync(gitHookSetupLockPath, '');
+
+    const hookSourceFolderPath = path.join(context.extensionPath, projectHookFolderPath);
+    const allowedFolderPrefix = "autocommit_";
 
     const sourceFiles = fs.readdirSync(hookSourceFolderPath, { withFileTypes: true })
-        .filter(dirent => dirent.isFile())
+        .filter(dirent => dirent.isFile() || (dirent.isDirectory() && dirent.name.startsWith(allowedFolderPrefix)))
         .map(dirent => dirent.name);
 
     const existingFiles = sourceFiles.filter(file => 
@@ -100,11 +114,24 @@ export const setUpGitHook = async (context: vscode.ExtensionContext) => {
             const sourcePath = path.join(hookSourceFolderPath, file);
             const targetPath = path.join(gitHookFolderPath, file);
             
-            fs.copyFileSync(sourcePath, targetPath);
-            fs.chmodSync(targetPath, '755');
+            if (fs.lstatSync(sourcePath).isDirectory()) {
+                if (fs.existsSync(targetPath)) {
+                    fs.rmSync(targetPath, { recursive: true });
+                }
+                fs.mkdirSync(targetPath, { recursive: true });
+
+                fs.readdirSync(sourcePath).forEach(subFile => {
+                    fs.copyFileSync(path.join(sourcePath, subFile), path.join(targetPath, subFile));
+                    fs.chmodSync(path.join(targetPath, subFile), '755');
+                });
+            }
+            else {
+                fs.copyFileSync(sourcePath, targetPath);
+                fs.chmodSync(targetPath, '755');
+            }
         });
 
-        const venvPath = path.join(gitHookFolderPath, GitHookVenvFolderName);
+        const venvPath = path.join(gitHookFolderPath, gitHookVenvFolderName);
         
         await installGitHookRequirements(gitHookFolderPath, venvPath);
 
@@ -114,5 +141,7 @@ export const setUpGitHook = async (context: vscode.ExtensionContext) => {
         vscode.window.showErrorMessage(
             ErrorMessages.GitHookSetupFailedError.replace("{}", errorMessage)
         );
+    } finally {
+        fs.rmSync(gitHookSetupLockPath);
     }
 };

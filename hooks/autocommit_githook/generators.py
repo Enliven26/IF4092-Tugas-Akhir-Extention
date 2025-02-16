@@ -7,7 +7,7 @@ from autocommit.core.models import CommitMessageGenerationPromptInputModel
 from autocommit.core.parsers.git import IDiffParser
 from autocommit.core.parsers.language.base import ICodeParser
 
-from git import ExtensionGit
+from autocommit_githook.git import ExtensionGit
 
 
 class CommitMessageGenerator:
