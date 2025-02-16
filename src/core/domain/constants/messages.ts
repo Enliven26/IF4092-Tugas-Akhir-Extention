@@ -29,4 +29,6 @@ export enum ErrorMessages {
     InvalidJiraIdCollectionFileContent = "IJira ID collection file should be a JSON array of strings.",
     InvalidContextType = "Invalid context type. Please provide a valid context type.",
     InvalidJiraUrl = "Invalid Jira URL. Please provide a valid Jira URL.",
+    FeatureNotImplemented = "Feature not implemented yet.",
+    ContextSetupFailed = "Failed to setup context: {}",
 }

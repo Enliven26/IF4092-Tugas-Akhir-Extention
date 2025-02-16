@@ -15,7 +15,20 @@ export const getJiraTicketContentAsync = async (jiraUrl: string, jiraTicketIds: 
             continue;
           }
   
-          results.push(issue.fields.summary);
+          const summary = issue.fields.summary;
+          const issueType = issue.fields.issuetype ? issue.fields.issuetype.name : "N/A";
+          const priority = issue.fields.priority ? issue.fields.priority.name : "N/A";
+          const description = issue.fields.description || "No description provided.";
+
+          const formattedIssue = `Ticket ID: ${issue.key}
+Issue Summary: ${summary}
+Issue Type: ${issueType}
+Priority: ${priority}
+
+Description:
+${description}`;
+
+          results.push(formattedIssue);
         }
         catch (error: any) {
           if (error instanceof HttpException)
