@@ -5,7 +5,7 @@ annotated-types==0.7.0
 anyio==4.6.2.post1
 asttokens==3.0.0
 attrs==24.2.0
-AutoCommit @ git+https://github.com/Enliven26/IF4092-Tugas-Akhir.git@5f4e185ae5db15efe9d955c73fdfdd5b383b79b3
+AutoCommit @ git+https://github.com/Enliven26/IF4092-Tugas-Akhir.git@007fcb0779ab43ae38ae72124d9a97061b13ad1e
 certifi==2024.8.30
 charset-normalizer==3.4.0
 colorama==0.4.6

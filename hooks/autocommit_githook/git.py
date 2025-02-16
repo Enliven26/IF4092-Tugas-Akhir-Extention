@@ -1,3 +1,4 @@
+import logging
 import subprocess
 from typing import Optional
 
@@ -9,11 +10,13 @@ class ExtensionGit(Git):
         self, repo_path: str, included_file_extensions: Optional[list[str]] = None
     ) -> list[str]:
         changed_files = subprocess.run(
-            ["git", "-C", repo_path, "diff", "--name-only"],
+            ["git", "-C", repo_path, "diff", "HEAD", "--name-only"],
             capture_output=True,
             text=True,
             check=True,
         ).stdout.split("\n")
+
+        changed_files = [changed_file for changed_file in changed_files if changed_file]
 
         if not included_file_extensions:
             return changed_files
@@ -30,7 +33,7 @@ class ExtensionGit(Git):
         if len(included_file_paths) == 0:
             return ""
 
-        command = ["git", "-C", repo_path, "diff"]
+        command = ["git", "-C", repo_path, "diff", "HEAD"]
 
         if included_file_paths:
             command.append("--")
@@ -45,5 +48,11 @@ class ExtensionGit(Git):
         return result.stdout
 
     def get_current_file_content(self, repo_path: str, file_path: str) -> str:
-        result = subprocess.run(["git", "-C", repo_path, "show", f":{file_path}"])
-        return result.stdout
+        command = ["git", "-C", repo_path, "show", f":{file_path}"]
+        try:
+            result = subprocess.run(command, capture_output=True, text=True, check=True)
+            return result.stdout
+
+        except subprocess.CalledProcessError:
+            logging.exception("Error while retrieving file content:")
+            return ""
