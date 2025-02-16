@@ -11,4 +11,4 @@ export const gitHookRequirementFileName = 'autocommit_requirements.txt';
 export const gitHookSettingsFileName = 'autocommit_settings.json';
 
 export const contextSeparator = "--- RETRIEVED DOCUMENT SPLIT END ---";
-export const contextFileName = 'context.txt';
+export const contextFileName = 'contexts.txt';
