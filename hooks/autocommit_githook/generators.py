@@ -72,6 +72,9 @@ class CommitMessageGenerator:
 
         diff = self.__git.get_current_diff(repo_path, included_file_paths)
 
+        if (len(diff) == 0):
+            return ""
+
         relevant_source_code = self.__get_implementations(
             repo_path,
             included_file_paths,
