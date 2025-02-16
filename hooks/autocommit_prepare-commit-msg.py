@@ -83,20 +83,23 @@ def _initialize_open_ai_chain() -> CommitMessageGenerationChain:
     return open_ai_few_shot_high_level_context_cmg_chain
 
 
-CONTEXT_FOLDER_NAME = "contexts"
-CONTEXT_FILE_NAME = "context.txt"
+CONTEXT_FOLDER_NAME = "autocommit_context"
+CONTEXT_FILE_NAME = "contexts.txt"
 CONTEXT_NOT_FOUND_MESSAGE = "# Error: AutoCommit context not found. Please do context setup using `setup context` command\n"
 
 
 def main(commit_msg_file: str, repo_path: str):
-    context_path = os.path.join(CONTEXT_FOLDER_NAME, CONTEXT_FILE_NAME)
+    context_folder_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), CONTEXT_FOLDER_NAME)
+    )
+    context_file_path = os.path.join(context_folder_path, CONTEXT_FILE_NAME)
 
     message = ""
 
     if not os.environ.get("OPENAI_API_KEY"):
         message = "# Error: OPENAI_API_KEY is not set"
 
-    elif not os.path.exists(context_path):
+    elif not os.path.exists(context_file_path):
         message = CONTEXT_NOT_FOUND_MESSAGE
 
     else:
@@ -106,7 +109,7 @@ def main(commit_msg_file: str, repo_path: str):
         message = generator.generate(
             chain,
             repo_path,
-            CONTEXT_FOLDER_NAME,
+            context_folder_path,
             [".java"],
         )
 
