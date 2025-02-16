@@ -95,9 +95,13 @@ export const setUpGitHook = async (context: vscode.ExtensionContext) => {
 
     const hookSourceFolderPath = path.join(context.extensionPath, projectHookFolderPath);
     const allowedFolderPrefix = "autocommit_";
+    const excludedFiles = ["autocommit_settings.json", "autocommit_test.py"];
+    const excludedFolders = ["autocommit_context"];
+    const excludedSubfolders = ["__pycache__"];
 
     const sourceFiles = fs.readdirSync(hookSourceFolderPath, { withFileTypes: true })
-        .filter(dirent => dirent.isFile() || (dirent.isDirectory() && dirent.name.startsWith(allowedFolderPrefix)))
+        .filter(dirent => (dirent.isFile() && !excludedFiles.includes(dirent.name)) 
+            || (dirent.isDirectory() && dirent.name.startsWith(allowedFolderPrefix) && !excludedFolders.includes(dirent.name)))
         .map(dirent => dirent.name);
 
     const existingFiles = sourceFiles.filter(file => 
@@ -145,8 +149,14 @@ export const setUpGitHook = async (context: vscode.ExtensionContext) => {
                     fs.mkdirSync(targetPath, { recursive: true });
 
                     fs.readdirSync(sourcePath).forEach(subFile => {
-                        fs.copyFileSync(path.join(sourcePath, subFile), path.join(targetPath, subFile));
-                        fs.chmodSync(path.join(targetPath, subFile), '755');
+                        const isExcluded = subFile
+                            .split(path.sep)
+                            .some(segment => excludedSubfolders.includes(segment));
+                        
+                        if (!isExcluded) {
+                            fs.copyFileSync(path.join(sourcePath, subFile), path.join(targetPath, subFile));
+                            fs.chmodSync(path.join(targetPath, subFile), '755');
+                        }
                     });
                 }
                 else {

@@ -5,7 +5,7 @@ repo_root=$(git rev-parse --show-toplevel)
 
 exec < /dev/tty
 
-read -s -p "Enter your secret: " open_ai_key
+read -s -p "Enter your api key: " open_ai_key
 
 exec <&-
 
