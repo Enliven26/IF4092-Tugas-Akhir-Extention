@@ -4,7 +4,7 @@ import * as path from 'path';
 import { ErrorMessages, InformationMessages, PromptMessages, WarningMessages } from '../../core/domain/constants/messages';
 import * as childProcess from 'child_process';
 import { promisify } from 'util';
-import { gitHookVenvFolderName, gitHookRelativeFolderPath, gitHookSetupLockRelativePath, projectHookFolderPath, gitHookRequirementFileName } from '../domain/constants/values';
+import { gitHookVenvFolderName, gitHookRelativeFolderPath, gitHookSetupLockRelativePath, projectHookFolderPath, gitHookRequirementFileName, gitHookSettingsFileName } from '../domain/constants/values';
 import { isGitIsIntializedAsync } from '../../core/services/gitservice';
 
 const exec = promisify(childProcess.exec);
@@ -52,6 +52,18 @@ const installGitHookRequirements = async (gitHookFolderPath: string, venvPath: s
             throw new Error(`Python setup failed: ${errorMessage}`);
         }
     });
+};
+
+const writeSettingsFile = (gitHookFolderPath: string) => {
+    const settingsPath = path.join(gitHookFolderPath, gitHookSettingsFileName);
+    const config = vscode.workspace.getConfiguration('autocommit.apiConfiguration');
+
+    const settings = {
+        "openaiLlmModel": config.get('llmModel') || "",
+        "openaiEmbeddingsModel": config.get('embeddingsModel') || "",
+    };
+
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 4));
 };
 
 export const setUpGitHook = async (context: vscode.ExtensionContext) => {
@@ -104,6 +116,8 @@ export const setUpGitHook = async (context: vscode.ExtensionContext) => {
             return;
         }
     }
+
+    writeSettingsFile(gitHookFolderPath);
 
     try {
         if (!fs.existsSync(gitHookFolderPath)) {
