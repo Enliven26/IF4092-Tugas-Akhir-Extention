@@ -14,21 +14,9 @@ const writeContextFile = async (contextFolderPath: string, contents: string[]) =
     fs.writeFileSync(contextFilePath, contextContent);
 };
 
-const setContextFromJira = async (context: vscode.ExtensionContext) => {
-    const workspaceFolder = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : undefined;
-
-    if (!workspaceFolder) {
-        vscode.window.showErrorMessage(ErrorMessages.NoWorkspaceFolder);
-        return;
-    }
-
-    const isGitExist = await isGitIsIntializedAsync(workspaceFolder);
-    
-    if (!isGitExist) {
-        vscode.window.showErrorMessage(ErrorMessages.GitNotInitialized);
-        return;
-    }
-
+const setContextFromJira = async (
+    context: vscode.ExtensionContext,
+    workspaceFolder: string) => {
     const gitHookContextFolderPath = path.join(workspaceFolder, gitHookContextFolderRelativePath);
 
     if (fs.existsSync(gitHookContextFolderPath)) {
@@ -45,9 +33,23 @@ const setContextFromJira = async (context: vscode.ExtensionContext) => {
         vscode.window.showInformationMessage(InformationMessages.ContextSetupCancelled);
         return;
     }
+    
+    var isJiraUrlValid = vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: "Setting up Autocommit context",
+        cancellable: false
+    }, async (progress) => {
+        progress.report({ message: "Validating Jira URL..." });
 
-    if (!await isJiraUrlValidAsync(jiraUrl)) {
-        vscode.window.showErrorMessage(ErrorMessages.InvalidJiraUrl);
+        if (!await isJiraUrlValidAsync(jiraUrl)) {
+            vscode.window.showErrorMessage(ErrorMessages.InvalidJiraUrl);
+            return false;
+        }
+
+        return true;
+    });
+
+    if (!isJiraUrlValid) {
         return;
     }
 
@@ -60,6 +62,8 @@ const setContextFromJira = async (context: vscode.ExtensionContext) => {
     });
 
     if (userChoice === cancelChoice) {
+        // TODO: Implement fetching all Jira tickets
+        vscode.window.showErrorMessage(ErrorMessages.FeatureNotImplemented);
         return;
     }
 
@@ -89,14 +93,48 @@ const setContextFromJira = async (context: vscode.ExtensionContext) => {
     }
 
     const validJiraTicketIds = jiraTicketIds.filter((id: any) => typeof id === 'string');
-    const jiraTicketContents = await getJiraTicketContentAsync(jiraUrl!, validJiraTicketIds);
 
-    await writeContextFile(gitHookContextFolderPath, jiraTicketContents);
+    await vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: "Setting up Autocommit context",
+        cancellable: false
+    }, async (progress) => {
+        try {
+            progress.report({ message: "Fetching Jira ticket contents..." });
+            const jiraTicketContents = await getJiraTicketContentAsync(jiraUrl!, validJiraTicketIds);
 
-    vscode.window.showInformationMessage(InformationMessages.ContextSetupSuccess);
+            await writeContextFile(gitHookContextFolderPath, jiraTicketContents);
+
+            vscode.window.showInformationMessage(InformationMessages.ContextSetupSuccess);
+        }
+        catch (error) {
+            var message = "encountered an error";
+
+            if (error instanceof Error) {
+                message = error.message;
+            }
+
+            vscode.window.showErrorMessage(ErrorMessages.ContextSetupFailed, message);
+        }
+    });
+    
 };
 
 export const setContext = async (context: vscode.ExtensionContext) => {
+    const workspaceFolder = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : undefined;
+
+    if (!workspaceFolder) {
+        vscode.window.showErrorMessage(ErrorMessages.NoWorkspaceFolder);
+        return;
+    }
+
+    const isGitExist = await isGitIsIntializedAsync(workspaceFolder);
+    
+    if (!isGitExist) {
+        vscode.window.showErrorMessage(ErrorMessages.GitNotInitialized);
+        return;
+    }
+    
     const contextTypes = [ContextType.Jira];
 
     const selectedContextType = await vscode.window.showQuickPick(contextTypes, {
@@ -109,9 +147,10 @@ export const setContext = async (context: vscode.ExtensionContext) => {
         return;
     }
 
+
     switch (selectedContextType) {
         case ContextType.Jira:
-            await setContextFromJira(context);
+            await setContextFromJira(context, workspaceFolder);
             break;
         default:
             vscode.window.showErrorMessage(ErrorMessages.InvalidContextType);
