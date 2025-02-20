@@ -86,13 +86,6 @@ export const setUpGitHook = async (context: vscode.ExtensionContext) => {
     const gitHookFolderPath = path.join(workspaceFolder, gitHookRelativeFolderPath);
     const gitHookSetupLockPath = path.join(workspaceFolder, gitHookSetupLockRelativePath);
 
-    if (fs.existsSync(gitHookSetupLockPath)) {
-        vscode.window.showWarningMessage(WarningMessages.GitHookSetupIsBeingLocked);
-        return;
-    }
-
-    fs.writeFileSync(gitHookSetupLockPath, '');
-
     const hookSourceFolderPath = path.join(context.extensionPath, projectHookFolderPath);
     const allowedFolderPrefix = "autocommit_";
     const excludedFiles = ["autocommit_settings.json", "autocommit_test.py"];
@@ -129,6 +122,13 @@ export const setUpGitHook = async (context: vscode.ExtensionContext) => {
         cancellable: false
     }, async (progress) => {
 
+        if (fs.existsSync(gitHookSetupLockPath)) {
+            vscode.window.showWarningMessage(WarningMessages.GitHookSetupIsBeingLocked);
+            return;
+        }
+    
+        fs.writeFileSync(gitHookSetupLockPath, '');
+        
         writeSettingsFile(progress, gitHookFolderPath);
 
         try {

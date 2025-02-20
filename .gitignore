@@ -177,4 +177,5 @@ node_modules
 hooks/autocommit_context
 hooks/autocommit_test.py
 hooks/autocommit_settings.json
+hooks/autocommit_venv
 
