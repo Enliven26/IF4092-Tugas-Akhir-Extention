@@ -19,12 +19,6 @@ const setContextFromJira = async (
     workspaceFolder: string) => {
     const gitHookContextFolderPath = path.join(workspaceFolder, gitHookContextFolderRelativePath);
 
-    if (fs.existsSync(gitHookContextFolderPath)) {
-        fs.rmdirSync(gitHookContextFolderPath, { recursive: true });
-    }
-
-    fs.mkdirSync(gitHookContextFolderPath, { recursive: true });
-
     const jiraUrl = await vscode.window.showInputBox({
         placeHolder: 'Enter Jira URL'
     });
@@ -102,6 +96,13 @@ const setContextFromJira = async (
         try {
             progress.report({ message: "Fetching Jira ticket contents..." });
             const jiraTicketContents = await getJiraTicketContentAsync(jiraUrl!, validJiraTicketIds);
+
+            if (fs.existsSync(gitHookContextFolderPath)) {
+                fs.rmdirSync(gitHookContextFolderPath, { recursive: true });
+            }
+        
+            fs.mkdirSync(gitHookContextFolderPath, { recursive: true });
+
 
             await writeContextFile(gitHookContextFolderPath, jiraTicketContents);
 
