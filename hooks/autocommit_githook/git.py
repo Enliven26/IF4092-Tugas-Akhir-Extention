@@ -14,6 +14,7 @@ class ExtensionGit(Git):
             capture_output=True,
             text=True,
             check=True,
+            encoding="utf-8"
         ).stdout.split("\n")
 
         changed_files = [changed_file for changed_file in changed_files if changed_file]
@@ -44,11 +45,12 @@ class ExtensionGit(Git):
             capture_output=True,
             text=True,
             check=True,
+            encoding="utf-8"
         )
         return result.stdout
 
     def get_current_file_content(self, repo_path: str, file_path: str) -> str:
         command = ["git", "-C", repo_path, "show", f":{file_path}"]
 
-        result = subprocess.run(command, capture_output=True, text=True, check=True)
+        result = subprocess.run(command, capture_output=True, text=True, check=True, encoding="utf-8")
         return result.stdout
