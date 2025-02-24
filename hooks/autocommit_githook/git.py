@@ -49,10 +49,6 @@ class ExtensionGit(Git):
 
     def get_current_file_content(self, repo_path: str, file_path: str) -> str:
         command = ["git", "-C", repo_path, "show", f":{file_path}"]
-        try:
-            result = subprocess.run(command, capture_output=True, text=True, check=True)
-            return result.stdout
 
-        except subprocess.CalledProcessError:
-            logging.exception("Error while retrieving file content:")
-            return ""
+        result = subprocess.run(command, capture_output=True, text=True, check=True)
+        return result.stdout
