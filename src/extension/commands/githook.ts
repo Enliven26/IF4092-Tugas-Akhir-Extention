@@ -6,8 +6,47 @@ import * as childProcess from 'child_process';
 import { promisify } from 'util';
 import { gitHookVenvFolderName, gitHookRelativeFolderPath, gitHookSetupLockRelativePath, projectHookFolderPath, gitHookRequirementFileName, gitHookSettingsFileName } from '../domain/constants/values';
 import { isGitIsIntializedAsync } from '../../core/services/gitservice';
+import { spawn } from 'child_process';
 
 const exec = promisify(childProcess.exec);
+const outputChannel = vscode.window.createOutputChannel("Git Hook Setup");
+
+const runCommandLive = async (
+    command: string,
+    args: string[],
+    outputChannel: vscode.OutputChannel,
+    cwd?: string
+): Promise<void> => {
+    return new Promise((resolve, reject) => {
+        const child = spawn(command, args, {
+            shell: true,
+            cwd,
+        });
+
+        outputChannel.appendLine(`> ${[command, ...args].join(' ')}`);
+
+        child.stdout.on('data', (data) => {
+            outputChannel.append(data.toString());
+        });
+
+        child.stderr.on('data', (data) => {
+            outputChannel.appendLine(data.toString());
+        });
+
+        child.on('error', (err) => {
+            outputChannel.appendLine(`❌ Error: ${err.message}`);
+            reject(err);
+        });
+
+        child.on('close', (code) => {
+            if (code === 0) {
+                resolve();
+            } else {
+                reject(new Error(`Command exited with code ${code}`));
+            }
+        });
+    });
+};
 
 const installGitHookRequirements = async (
     progress: vscode.Progress<{ message?: string }>,
@@ -42,7 +81,9 @@ const installGitHookRequirements = async (
             ? path.join(venvPath, 'Scripts', 'pip')
             : path.join(venvPath, 'bin', 'pip');
 
-        await exec(`"${pipPath}" install -r "${requirementsPath}"`);
+        const outputChannel = vscode.window.createOutputChannel("Git Hook Setup");
+
+        await runCommandLive(`"${pipPath}" install -r "${requirementsPath}"`, [], outputChannel);
 
         vscode.window.showInformationMessage(InformationMessages.GitHookSetupSuccess);
     } catch (error) {
