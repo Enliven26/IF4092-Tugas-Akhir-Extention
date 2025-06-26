@@ -89,7 +89,7 @@ export const setUpGitHook = async (context: vscode.ExtensionContext) => {
     const hookSourceFolderPath = path.join(context.extensionPath, projectHookFolderPath);
     const allowedFolderPrefix = "autocommit_";
     const excludedFiles = ["autocommit_settings.json", "autocommit_test.py"];
-    const excludedFolders = ["autocommit_context"];
+    const excludedFolders = ["autocommit_context", "autocommit_venv"];
     const excludedSubfolders = ["__pycache__"];
 
     const sourceFiles = fs.readdirSync(hookSourceFolderPath, { withFileTypes: true })
